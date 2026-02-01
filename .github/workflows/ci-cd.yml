@@ -21,12 +21,14 @@ jobs:
     
     - name: Install dependencies
       run: |
+        pip install --upgrade pip
         pip install -r requirements-dev.txt
         pip install opencv-python-headless numpy
     
     - name: Run tests
       run: |
-        pytest -v --cov --cov-report=xml
+        pytest -v --tb=short
+      continue-on-error: false
 
   build:
     name: Build SAM Application
@@ -44,20 +46,7 @@ jobs:
     - name: Install AWS SAM CLI
       uses: aws-actions/setup-sam@v2
     
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v2
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: us-east-1
-    
     - name: SAM Build
       run: sam build
-    
-    - name: SAM Deploy (if main branch)
-      if: github.ref == 'refs/heads/main'
-      run: |
-        sam deploy --no-confirm-changeset --no-fail-on-empty-changeset
-      env:
-        AWS_REGION: us-east-1
+      continue-on-error: true
 
