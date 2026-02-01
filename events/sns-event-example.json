@@ -1,0 +1,22 @@
+{
+  "Records": [
+    {
+      "EventSource": "aws:sns",
+      "EventVersion": "1.0",
+      "EventSubscriptionArn": "arn:aws:sns:us-east-1:123456789012:video-processing-notifications:12345678-1234-1234-1234-123456789012",
+      "Sns": {
+        "Type": "Notification",
+        "MessageId": "12345678-1234-1234-1234-123456789012",
+        "TopicArn": "arn:aws:sns:us-east-1:123456789012:video-processing-notifications",
+        "Subject": "Video Processing Completed",
+        "Message": "{\"video_key\":\"test-video.mp4\",\"frames_count\":135,\"frames_prefix\":\"frames/test-video/\",\"status\":\"completed\",\"lambda\":\"lambda1_frame_extraction\"}",
+        "Timestamp": "2026-02-01T12:00:00.000Z",
+        "SignatureVersion": "1",
+        "Signature": "EXAMPLE",
+        "SigningCertUrl": "https://sns.us-east-1.amazonaws.com/SimpleNotificationService-123456789.pem",
+        "UnsubscribeUrl": "https://sns.us-east-1.amazonaws.com/?Action=Unsubscribe&SubscriptionArn=arn:aws:sns:us-east-1:123456789012:video-processing-notifications:12345678-1234-1234-1234-123456789012",
+        "MessageAttributes": {}
+      }
+    }
+  ]
+}

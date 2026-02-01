@@ -1,0 +1,27 @@
+version = 0.1
+
+[default]
+[default.global.parameters]
+stack_name = "fiapx-video-processing"
+
+[default.build.parameters]
+cached = true
+parallel = true
+
+[default.deploy.parameters]
+capabilities = "CAPABILITY_IAM"
+confirm_changeset = true
+resolve_s3 = true
+region = "us-east-1"
+parameter_overrides = [
+    "InputBucket=fiapx-video-input-637423242759-20260131211044",
+    "OutputBucket=fiapx-video-output-637423242759-20260131211044",
+    "FramesPerSecond=1.0"
+]
+
+[default.package.parameters]
+resolve_s3 = true
+
+[default.local_start_api.parameters]
+warm_containers = "EAGER"
+

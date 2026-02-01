@@ -1,0 +1,148 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  FIApx Video Processing - Lambda Functions
+  Sistema de processamento de vídeo com extração de frames e compactação
+
+Globals:
+  Function:
+    Timeout: 900
+    MemorySize: 3008
+    Runtime: python3.11
+    Environment:
+      Variables:
+        SNS_TOPIC_ARN: !Ref ProcessingNotificationTopic
+
+Parameters:
+  InputBucket:
+    Type: String
+    Description: Nome do bucket S3 para upload de vídeos
+  OutputBucket:
+    Type: String
+    Description: Nome do bucket S3 para armazenar frames e ZIPs
+  FramesPerSecond:
+    Type: Number
+    Default: 1.0
+    Description: Frames por segundo a serem extraídos
+
+Resources:
+  # Dead Letter Queues para tratamento de falhas
+  FrameExtractionDLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: video-frame-extraction-dlq
+      MessageRetentionPeriod: 1209600  # 14 dias
+      ReceiveMessageWaitTimeSeconds: 0
+
+  ZipCompressionDLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: video-zip-compression-dlq
+      MessageRetentionPeriod: 1209600  # 14 dias
+      ReceiveMessageWaitTimeSeconds: 0
+
+  # SNS Topic para notificações
+  ProcessingNotificationTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: video-processing-notifications
+      DisplayName: Video Processing Notifications
+
+  # Lambda 1 - Frame Extraction
+  FrameExtractionFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: video-frame-extraction
+      CodeUri: lambda1_frame_extraction/
+      Handler: handler.lambda_handler
+      Description: Processa vídeo e extrai frames salvando em bucket S3
+      Timeout: 900  # 15 minutos (máximo para Lambda)
+      MemorySize: 3008  # Máximo para melhor performance
+      ReservedConcurrentExecutions: 10  # Limitar concorrência para evitar sobrecarga
+      Environment:
+        Variables:
+          OUTPUT_BUCKET: !Ref OutputBucket
+          FRAMES_PER_SECOND: !Ref FramesPerSecond
+          SNS_TOPIC_ARN: !Ref ProcessingNotificationTopic
+      DeadLetterQueue:
+        Type: SQS
+        TargetArn: !GetAtt FrameExtractionDLQ.Arn
+      # Evento S3 será configurado manualmente após o deploy
+      # pois o bucket InputBucket é criado externamente
+      Policies:
+        - S3ReadPolicy:
+            BucketName: !Ref InputBucket
+        - S3WritePolicy:
+            BucketName: !Ref OutputBucket
+        - SNSPublishMessagePolicy:
+            TopicName: !GetAtt ProcessingNotificationTopic.TopicName
+        - SQSSendMessagePolicy:
+            QueueName: !GetAtt FrameExtractionDLQ.QueueName
+
+  # Lambda 2 - ZIP Compression
+  ZipCompressionFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: video-zip-compression
+      CodeUri: lambda2_zip_compression/
+      Handler: handler.lambda_handler
+      Description: Compacta frames em arquivo ZIP
+      Timeout: 900  # 15 minutos
+      MemorySize: 3008  # Máximo para melhor performance
+      ReservedConcurrentExecutions: 10  # Limitar concorrência
+      Environment:
+        Variables:
+          FRAMES_BUCKET: !Ref OutputBucket
+          OUTPUT_BUCKET: !Ref OutputBucket
+          SNS_TOPIC_ARN: !Ref ProcessingNotificationTopic
+      DeadLetterQueue:
+        Type: SQS
+        TargetArn: !GetAtt ZipCompressionDLQ.Arn
+      Events:
+        FrameExtractionComplete:
+          Type: SNS
+          Properties:
+            Topic: !Ref ProcessingNotificationTopic
+            FilterPolicy:
+              lambda:
+                - lambda1_frame_extraction
+      Policies:
+        - S3ReadPolicy:
+            BucketName: !Ref OutputBucket
+        - S3WritePolicy:
+            BucketName: !Ref OutputBucket
+        - SNSPublishMessagePolicy:
+            TopicName: !GetAtt ProcessingNotificationTopic.TopicName
+        - SQSSendMessagePolicy:
+            QueueName: !GetAtt ZipCompressionDLQ.QueueName
+
+Outputs:
+  FrameExtractionFunctionArn:
+    Description: ARN da Lambda de extração de frames
+    Value: !GetAtt FrameExtractionFunction.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-FrameExtractionFunctionArn
+
+  ZipCompressionFunctionArn:
+    Description: ARN da Lambda de compactação ZIP
+    Value: !GetAtt ZipCompressionFunction.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-ZipCompressionFunctionArn
+
+  ProcessingNotificationTopicArn:
+    Description: ARN do tópico SNS para notificações
+    Value: !Ref ProcessingNotificationTopic
+    Export:
+      Name: !Sub ${AWS::StackName}-ProcessingNotificationTopicArn
+
+  FrameExtractionDLQArn:
+    Description: ARN da Dead Letter Queue da Lambda 1
+    Value: !GetAtt FrameExtractionDLQ.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-FrameExtractionDLQArn
+
+  ZipCompressionDLQArn:
+    Description: ARN da Dead Letter Queue da Lambda 2
+    Value: !GetAtt ZipCompressionDLQ.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-ZipCompressionDLQArn
