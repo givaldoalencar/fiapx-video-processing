@@ -16,9 +16,9 @@ from pathlib import Path
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-# Inicializar clientes AWS
-s3_client = boto3.client('s3')
-sns_client = boto3.client('sns')
+# Inicializar clientes AWS com região padrão
+s3_client = boto3.client('s3', region_name=os.environ.get('AWS_REGION', 'us-east-1'))
+sns_client = boto3.client('sns', region_name=os.environ.get('AWS_REGION', 'us-east-1'))
 
 # Variáveis de ambiente
 FRAMES_BUCKET = os.environ.get('FRAMES_BUCKET')  # Bucket onde os frames estão (mesmo do OUTPUT da Lambda 1)
