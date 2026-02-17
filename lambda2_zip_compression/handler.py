@@ -227,8 +227,55 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     for idx, record in enumerate(records):
         try:
             # Parse da mensagem SNS
-            sns_message_str = record.get('Sns', {}).get('Message', '{}')
-            sns_message = json.loads(sns_message_str)
+            sns_record = record.get('Sns', {})
+            sns_message_str = sns_record.get('Message', '{}')
+            
+            # Log para debug
+            logger.info(f"Mensagem SNS recebida (primeiros 200 chars): {sns_message_str[:200]}")
+            logger.info(f"Mensagem SNS completa: {sns_message_str}")
+            
+            # Tentar fazer parse da mensagem
+            # A mensagem pode vir em diferentes formatos dependendo de como foi enviada
+            sns_message = None
+            
+            # Primeiro, tentar parse direto como JSON
+            try:
+                sns_message = json.loads(sns_message_str)
+            except json.JSONDecodeError:
+                # Se falhar, pode ser que a mensagem esteja duplamente codificada
+                try:
+                    decoded = json.loads(sns_message_str)
+                    if isinstance(decoded, str):
+                        sns_message = json.loads(decoded)
+                    else:
+                        sns_message = decoded
+                except (json.JSONDecodeError, TypeError):
+                    # Última tentativa: pode ser que a mensagem seja um dict Python serializado incorretamente
+                    # Formato: {video_key:value, frames_count:166, ...} sem aspas nas chaves e valores
+                    try:
+                        import re
+                        # Adicionar aspas duplas nas chaves que não têm aspas
+                        # Padrão: encontrar chave seguida de dois pontos (sem aspas)
+                        fixed_str = re.sub(r'([{,]\s*)([a-zA-Z_][a-zA-Z0-9_]*)\s*:', r'\1"\2":', sns_message_str)
+                        # Adicionar aspas duplas nos valores de string que não têm aspas
+                        # Padrão: dois pontos seguido de valor sem aspas (não numérico, não booleano)
+                        # Primeiro, tratar valores de string simples
+                        fixed_str = re.sub(r':\s*([a-zA-Z0-9_/\.-]+)([,}])', r': "\1"\2', fixed_str)
+                        # Corrigir valores numéricos que foram transformados incorretamente
+                        fixed_str = re.sub(r':\s*"(\d+)"([,}])', r': \1\2', fixed_str)
+                        # Corrigir valores booleanos
+                        fixed_str = re.sub(r':\s*"(true|false)"([,}])', r': \1\2', fixed_str)
+                        sns_message = json.loads(fixed_str)
+                        logger.info(f"Mensagem corrigida e parseada: {fixed_str[:200]}")
+                    except Exception as e:
+                        logger.error(f"Erro ao fazer parse da mensagem SNS: {str(e)}")
+                        logger.error(f"Mensagem recebida (completa): {sns_message_str}")
+                        raise ValueError(f"Mensagem SNS inválida - não é JSON válido: {str(e)}")
+            
+            if not sns_message:
+                raise ValueError("Não foi possível fazer parse da mensagem SNS")
+            
+            logger.info(f"Mensagem parseada com sucesso: video_key={sns_message.get('video_key')}, frames_prefix={sns_message.get('frames_prefix')}")
             
             frames_prefix = sns_message.get('frames_prefix', '')
             video_key = sns_message.get('video_key', '')

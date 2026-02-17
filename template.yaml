@@ -58,7 +58,7 @@ Resources:
       Description: Processa vídeo e extrai frames salvando em bucket S3
       Timeout: 900  # 15 minutos (máximo para Lambda)
       MemorySize: 3008  # Máximo para melhor performance
-      ReservedConcurrentExecutions: 10  # Limitar concorrência para evitar sobrecarga
+      # ReservedConcurrentExecutions removido - usar limite padrão da conta
       Environment:
         Variables:
           OUTPUT_BUCKET: !Ref OutputBucket
@@ -89,7 +89,7 @@ Resources:
       Description: Compacta frames em arquivo ZIP
       Timeout: 900  # 15 minutos
       MemorySize: 3008  # Máximo para melhor performance
-      ReservedConcurrentExecutions: 10  # Limitar concorrência
+      # ReservedConcurrentExecutions removido - usar limite padrão da conta
       Environment:
         Variables:
           FRAMES_BUCKET: !Ref OutputBucket
