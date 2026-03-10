@@ -10,6 +10,11 @@ jobs:
   test:
     name: Run Tests
     runs-on: ubuntu-latest
+
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION || 'us-east-1' }}
     
     steps:
     - uses: actions/checkout@v3
@@ -26,10 +31,7 @@ jobs:
         pip install opencv-python-headless numpy
     
     - name: Run tests
-      env:
-        AWS_REGION: us-east-1
-        AWS_ACCESS_KEY_ID: test
-        AWS_SECRET_ACCESS_KEY: test
+      
       run: |
         pytest -v --tb=short
       continue-on-error: false
