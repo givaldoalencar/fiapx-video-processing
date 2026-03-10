@@ -56,29 +56,6 @@ jobs:
       run: sam build
       continue-on-error: true
 
-  deploy:
-    name: Deploy SAM Application
-    runs-on: ubuntu-latest
-    needs: build
-
-    steps:
-    - uses: actions/checkout@v3
-
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.11'
-
-    - name: Install AWS SAM CLI
-      uses: aws-actions/setup-sam@v2
-
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v2
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ secrets.AWS_DEFAULT_REGION || 'us-east-1' }}
-
     - name: Deploy SAM stack
       run: |
         sam deploy \
