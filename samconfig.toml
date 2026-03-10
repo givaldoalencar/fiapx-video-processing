@@ -14,8 +14,8 @@ confirm_changeset = true
 resolve_s3 = true
 region = "us-east-1"
 parameter_overrides = [
-    "InputBucket=fiapx-video-input-637423242759-20260131211044",
-    "OutputBucket=fiapx-video-output-637423242759-20260131211044",
+    "InputBucket=fiapx-video-input-tc5",
+    "OutputBucket=fiapx-video-output-tc5",
     "FramesPerSecond=1.0"
 ]
 
