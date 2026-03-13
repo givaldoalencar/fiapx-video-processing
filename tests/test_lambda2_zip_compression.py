@@ -139,7 +139,7 @@ class TestUploadZipToS3:
             
             s3_key = upload_zip_to_s3(zip_path, "test-bucket", "test-video")
             
-            assert s3_key == "zips/test-video_frames.zip"
+            assert s3_key == "zips/test-video.zip"
             mock_s3_client.upload_file.assert_called_once_with(
                 zip_path, "test-bucket", s3_key
             )
@@ -152,7 +152,7 @@ class TestNotifyCompletion:
     @patch.object(handler_lambda2, 'SNS_TOPIC_ARN', 'arn:aws:sns:us-east-1:123456789012:test-topic')
     def test_notify_completion_success(self, mock_sns_client):
         """Testa notificação bem-sucedida"""
-        notify_completion("test-video", 10, "zips/test-video_frames.zip", success=True)
+        notify_completion("test-video", 10, "zips/test-video.zip", success=True)
         
         mock_sns_client.publish.assert_called_once()
         call_args = mock_sns_client.publish.call_args
@@ -161,7 +161,7 @@ class TestNotifyCompletion:
         message = json.loads(call_args[1]['Message'])
         assert message['status'] == 'completed'
         assert message['frames_count'] == 10
-        assert message['zip_key'] == "zips/test-video_frames.zip"
+        assert message['zip_key'] == "zips/test-video.zip"
 
 
 class TestLambdaHandler:
@@ -187,7 +187,7 @@ class TestLambdaHandler:
             
             mock_download.return_value = [frame1, frame2]
             mock_create_zip.return_value = os.path.join(temp_dir, "test.zip")
-            mock_upload.return_value = "zips/test-video_frames.zip"
+            mock_upload.return_value = "zips/test-video.zip"
             
             # Evento SNS
             event = {
@@ -262,7 +262,7 @@ class TestLambdaHandler:
             
             mock_download.return_value = [frame1]
             mock_create_zip.return_value = os.path.join(temp_dir, "test.zip")
-            mock_upload.return_value = "zips/test-video_frames.zip"
+            mock_upload.return_value = "zips/test-video.zip"
             
             event = {
                 'Records': [
