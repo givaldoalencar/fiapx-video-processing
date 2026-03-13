@@ -37,7 +37,7 @@ jobs:
       continue-on-error: false
 
   build:
-    name: Build SAM Application
+    name: Deploy SAM Application
     runs-on: ubuntu-latest
     needs: test
 
