@@ -313,7 +313,7 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 logger.info(f"✅ {len(frames)} frames baixados com sucesso")
                 
                 # Criar arquivo ZIP
-                zip_path = os.path.join(temp_dir, f"{video_name}_frames.zip")
+                zip_path = os.path.join(temp_dir, f"{video_name}.zip")
                 create_zip_file(frames, zip_path, video_name)
                 
                 # Upload do ZIP para S3
