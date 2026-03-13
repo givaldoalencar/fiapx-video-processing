@@ -144,7 +144,7 @@ def upload_zip_to_s3(zip_path: str, bucket: str, video_name: str) -> str:
     Raises:
         Exception: Se houver erro no upload
     """
-    zip_filename = f"{video_name}_frames.zip"
+    zip_filename = f"{video_name}.zip"
     s3_key = f"zips/{zip_filename}"
     
     logger.info(f"Fazendo upload do ZIP para s3://{bucket}/{s3_key}")
