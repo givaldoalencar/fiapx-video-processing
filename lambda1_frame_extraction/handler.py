@@ -232,6 +232,8 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 validate_video_file(video_key)
             except ValueError as e:
                 logger.error(f"Validação falhou para {video_key}: {str(e)}")
+                # Notificar falha
+                notify_completion(video_key, 0, "", success=False)
                 errors.append({
                     'video_key': video_key,
                     'error': str(e)
