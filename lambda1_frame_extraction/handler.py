@@ -214,15 +214,7 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         }
     
     logger.info(f"Processando {len(records)} vídeo(s)")
-    # Notificar em processamento
-    notify_completion(video_key, 0, "", success=True)
-
-    results.append({
-        'video_key': video_key,
-        'frames_count': len(frames),
-        'frames_prefix': frames_prefix,
-        'status': 'processing'
-    })
+    
     
     results = []
     errors = []
@@ -234,6 +226,16 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             # Decodificar a chave do objeto (espaços podem vir como + ou %20)
             video_key = unquote_plus(record['s3']['object']['key'])
             
+            # Notificar em processamento
+            notify_completion(video_key, 0, "", success=True)
+
+            results.append({
+                'video_key': video_key,
+                'frames_count': len(frames),
+                'frames_prefix': frames_prefix,
+                'status': 'processing'
+            })
+
             logger.info(f"[{idx+1}/{len(records)}] Processando vídeo: s3://{bucket_name}/{video_key}")
             
             # Validar se é um arquivo de vídeo
