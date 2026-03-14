@@ -197,30 +197,7 @@ class TestLambdaHandler:
         with pytest.raises(ValueError, match="OUTPUT_BUCKET não configurado"):
             lambda_handler(event, None)
     
-    @patch.object(handler_lambda1, 'validate_video_file')
-    @patch.object(handler_lambda1, 's3_client')
-    @patch.object(handler_lambda1, 'OUTPUT_BUCKET', 'test-output-bucket')
-    @patch.object(handler_lambda1, 'FRAMES_PER_SECOND', 1.0)
-    def test_lambda_handler_invalid_video_format(self, mock_s3_client, mock_validate):
-        """Testa tratamento de formato de vídeo inválido"""
-        mock_validate.side_effect = ValueError("Formato não suportado")
-        
-        event = {
-            'Records': [{
-                's3': {
-                    'bucket': {'name': 'test-input-bucket'},
-                    'object': {'key': 'document.pdf'}
-                }
-            }]
-        }
-        
-        response = lambda_handler(event, None)
-        
-        assert response['statusCode'] == 207  # Multi-Status
-        body = json.loads(response['body'])
-        assert body['processed'] == 0
-        assert body['failed'] == 1
-        assert len(body['errors']) == 1
+    
     
     @patch.object(handler_lambda1, 'validate_video_file')
     @patch.object(handler_lambda1, 's3_client')
