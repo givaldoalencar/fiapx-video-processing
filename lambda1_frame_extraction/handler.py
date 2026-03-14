@@ -214,6 +214,15 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         }
     
     logger.info(f"Processando {len(records)} vídeo(s)")
+    # Notificar em processamento
+    notify_completion(video_key, 0, "", success=True)
+
+    results.append({
+        'video_key': video_key,
+        'frames_count': len(frames),
+        'frames_prefix': frames_prefix,
+        'status': 'processing'
+    })
     
     results = []
     errors = []
