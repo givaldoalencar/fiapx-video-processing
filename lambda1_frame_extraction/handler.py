@@ -231,8 +231,8 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
 
             results.append({
                 'video_key': video_key,
-                'frames_count': len(frames),
-                'frames_prefix': frames_prefix,
+                'frames_count': 0,
+                'frames_prefix': "",
                 'status': 'processing'
             })
 
